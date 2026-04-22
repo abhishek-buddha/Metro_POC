@@ -29,7 +29,6 @@ const convertDateFormat = (dateStr: string): string => {
 // Helper to map backend submission to frontend format
 const mapSubmission = (backendData: any): Submission => {
   // Generate hardcoded fields for POC (fields not in documents)
-  const firstName = backendData.aadhaar_name?.split(' ')[0] || backendData.pan_name?.split(' ')[0] || '';
   const fullName = backendData.pan_name || backendData.aadhaar_name || '';
   const nameForEmail = fullName.toLowerCase().replace(/\s+/g, '.');
 
