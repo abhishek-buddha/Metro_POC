@@ -6,6 +6,7 @@ import FilterPanel from '../components/FilterPanel';
 import ThreeDotMenu from '../components/ThreeDotMenu';
 import type { Submission, FilterState } from '../utils/types';
 import { submissionApi, getDisplayStatus, getInitials } from '../utils/api';
+import AddNewModal from '../components/AddNewModal';
 
 const EmployeeList: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const EmployeeList: React.FC = () => {
     submissionLevel: '',
   });
   const [activeTab, setActiveTab] = useState('Onboarding');
+  const [showModal, setShowModal] = useState(false);
 
   const tabs = [
     'Employee',
@@ -141,7 +143,7 @@ const EmployeeList: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900">
                 Add Employees List
               </h2>
-              <button className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+              <button onClick={() => setShowModal(true)} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
                 <Plus size={18} />
                 <span>Add New</span>
               </button>
@@ -268,8 +270,19 @@ const EmployeeList: React.FC = () => {
           </div>
         </div>
       </div>
+      {showModal && (
+        <AddNewModal
+          onClose={() => setShowModal(false)}
+          onComplete={(submissionId) => {
+            setShowModal(false);
+            fetchSubmissions();
+            navigate('/employee/' + submissionId + '/form');
+          }}
+        />
+      )}
     </div>
   );
 };
 
 export default EmployeeList;
+

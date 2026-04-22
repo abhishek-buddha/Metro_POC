@@ -161,3 +161,44 @@ export const getInitials = (name: string): string => {
 };
 
 export default apiClient;
+
+export interface UploadResponse {
+  job_id: string;
+  submission_id: string;
+  status: string;
+  message: string;
+}
+
+export interface JobStatusResponse {
+  job_id: string;
+  status: string;
+  submission_id: string;
+  document_type: string | null;
+  message: string;
+}
+
+export const uploadApi = {
+  uploadDocument: async (file: File, phoneNumber: string): Promise<UploadResponse> => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('phone_number', phoneNumber);
+    const response = await fetch(API_BASE_URL + '/api/upload/document', {
+      method: 'POST',
+      headers: { 'X-API-Key': API_KEY },
+      body: form,
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || 'Upload failed (' + response.status + ')');
+    }
+    return response.json();
+  },
+
+  getJobStatus: async (jobId: string): Promise<JobStatusResponse> => {
+    const response = await fetch(API_BASE_URL + '/api/upload/status/' + jobId, {
+      headers: { 'X-API-Key': API_KEY },
+    });
+    if (!response.ok) throw new Error('Status check failed (' + response.status + ')');
+    return response.json();
+  },
+};
