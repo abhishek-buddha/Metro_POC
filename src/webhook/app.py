@@ -32,6 +32,7 @@ from src.models.database import (
     get_session, Employee, KYCSubmission, Document, AuditLog
 )
 from src.services.encryption import decrypt_field
+from src.api.upload import router as upload_router
 
 # Initialize app
 app = FastAPI(
@@ -41,13 +42,23 @@ app = FastAPI(
 )
 
 # Add CORS middleware
+# Allow origins from env var CORS_ORIGINS (comma-separated) or defaults
+_cors_origins_raw = os.getenv("CORS_ORIGINS", "")
+_cors_origins = (
+    [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+    if _cors_origins_raw
+    else ["http://localhost:5173", "http://127.0.0.1:5173", "*"]
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register routers
+app.include_router(upload_router)
 
 # Setup logger for this module
 webhook_logger = setup_logger(__name__)
