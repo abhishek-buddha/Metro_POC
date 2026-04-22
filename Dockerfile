@@ -1,10 +1,9 @@
-# Multi-stage Dockerfile for WhatsApp KYC System
-FROM python:3.11-slim as base
+# Metro KYC — single container: FastAPI + Extraction Worker + Redis
+FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies for EasyOCR and image processing
+# System dependencies: OpenCV libs + Redis server + Supervisor
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libsm6 \
@@ -12,22 +11,24 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     libgomp1 \
     libgl1 \
+    redis-server \
+    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Python dependencies
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Application code
 COPY . .
 
-# Create necessary directories
+# Create runtime directories
 RUN mkdir -p data uploads logs
 
-# Expose port for webhook service
+# Supervisord config
+COPY supervisord.conf /etc/supervisor/conf.d/metro.conf
+
 EXPOSE 8000
 
-# Default command (can be overridden in docker-compose.yml)
-CMD ["uvicorn", "src.webhook.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Single entrypoint: supervisord manages Redis + API + Worker
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/metro.conf"]
