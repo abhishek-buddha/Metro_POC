@@ -29,7 +29,7 @@ from src.utils.config import config, get_config
 from src.utils.logger import logger, setup_logger
 from src.utils.redis_client import get_redis_client
 from src.models.database import (
-    get_session, Employee, KYCSubmission, Document, AuditLog
+    get_session, Employee, KYCSubmission, Document, AuditLog, init_database
 )
 from src.services.encryption import decrypt_field
 from src.api.upload import router as upload_router
@@ -59,6 +59,11 @@ app.add_middleware(
 
 # Register routers
 app.include_router(upload_router)
+
+# Initialise DB tables on startup (creates tables if they don't exist)
+@app.on_event("startup")
+async def startup_event():
+    init_database()
 
 # Setup logger for this module
 webhook_logger = setup_logger(__name__)
