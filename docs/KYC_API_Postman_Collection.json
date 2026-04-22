@@ -1,0 +1,183 @@
+{
+  "info": {
+    "name": "Metro KYC API",
+    "description": "API endpoints for KYC submission management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "metro-kyc-secure-key-2026",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "List All Submissions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/submissions?limit=50&offset=0",
+          "host": ["{{base_url}}"],
+          "path": ["api", "submissions"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "50"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            },
+            {
+              "key": "status",
+              "value": "PENDING",
+              "disabled": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Submission by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/submissions/:submission_id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "submissions", ":submission_id"],
+          "variable": [
+            {
+              "key": "submission_id",
+              "value": "0ccc95a5-eb99-49b5-9412-6c167ceaf97d"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Employee by Phone",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/employees/:phone_number",
+          "host": ["{{base_url}}"],
+          "path": ["api", "employees", ":phone_number"],
+          "variable": [
+            {
+              "key": "phone_number",
+              "value": "+919063555464"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Approve Submission",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"APPROVED\",\n  \"reviewed_by\": \"hr@company.com\",\n  \"review_notes\": \"All documents verified and approved\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/submissions/:submission_id/review",
+          "host": ["{{base_url}}"],
+          "path": ["api", "submissions", ":submission_id", "review"],
+          "variable": [
+            {
+              "key": "submission_id",
+              "value": "0ccc95a5-eb99-49b5-9412-6c167ceaf97d"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Reject Submission",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"REJECTED\",\n  \"reviewed_by\": \"hr@company.com\",\n  \"review_notes\": \"Documents unclear, please resubmit\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/submissions/:submission_id/review",
+          "host": ["{{base_url}}"],
+          "path": ["api", "submissions", ":submission_id", "review"],
+          "variable": [
+            {
+              "key": "submission_id",
+              "value": "0ccc95a5-eb99-49b5-9412-6c167ceaf97d"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Audit Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/audit-logs?limit=100",
+          "host": ["{{base_url}}"],
+          "path": ["api", "audit-logs"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "100"
+            },
+            {
+              "key": "employee_id",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}
