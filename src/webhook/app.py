@@ -32,7 +32,7 @@ from src.utils.redis_client import get_redis_client
 from src.models.database import (
     get_session, Employee, KYCSubmission, Document, AuditLog, init_database
 )
-from src.services.encryption import decrypt_field
+from src.services.encryption import decrypt_field, encrypt_field
 from src.api.upload import router as upload_router
 
 # Initialize app
@@ -80,6 +80,25 @@ class FinalizeRequest(BaseModel):
     """Request model for finalizing HRMS submissions"""
     finalized_by: Optional[str] = None
     notes: Optional[str] = None
+
+
+class UpdateSubmissionRequest(BaseModel):
+    """Request model for saving HR-edited form data"""
+    first_name: Optional[str] = None
+    full_name: Optional[str] = None
+    dob: Optional[str] = None
+    gender: Optional[str] = None
+    blood_group: Optional[str] = None
+    marital_status: Optional[str] = None
+    father_name: Optional[str] = None
+    address_line1: Optional[str] = None
+    address_line2: Optional[str] = None
+    address_line3: Optional[str] = None
+    address_line4: Optional[str] = None
+    bank_account: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_branch: Optional[str] = None
 
 
 def generate_employee_id(session: Session) -> str:
@@ -633,6 +652,90 @@ def review_submission(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.patch("/api/submissions/{submission_id}")
+def update_submission(
+    submission_id: str,
+    update_data: UpdateSubmissionRequest,
+    api_key: str = Depends(verify_api_key),
+    db: Session = Depends(get_db)
+):
+    """
+    Save HR-edited form data for a submission.
+    Updates name corrections, blood group, address, bank details, etc.
+    Can be called multiple times — each call overwrites provided fields.
+    """
+    try:
+        submission = db.query(KYCSubmission).filter(
+            KYCSubmission.id == submission_id
+        ).first()
+
+        if not submission:
+            raise HTTPException(status_code=404, detail="Submission not found")
+
+        if submission.status == "FINALIZED":
+            raise HTTPException(status_code=400, detail="Cannot edit a finalized submission")
+
+        # Name fields
+        if update_data.first_name is not None:
+            submission.aadhaar_name = update_data.first_name
+        if update_data.full_name is not None:
+            submission.pan_name = update_data.full_name
+        if update_data.dob is not None:
+            submission.pan_dob = update_data.dob
+            submission.aadhaar_dob = update_data.dob
+        if update_data.gender is not None:
+            submission.aadhaar_gender = update_data.gender
+        if update_data.father_name is not None:
+            submission.pan_father_name = update_data.father_name
+
+        # HR-only fields
+        if update_data.blood_group is not None:
+            submission.blood_group = update_data.blood_group
+        if update_data.marital_status is not None:
+            submission.marital_status = update_data.marital_status
+
+        # Reconstruct address from form lines
+        address_parts = [
+            update_data.address_line1,
+            update_data.address_line2,
+            update_data.address_line3,
+            update_data.address_line4,
+        ]
+        address = ', '.join(p for p in address_parts if p)
+        if address:
+            submission.aadhaar_address = address
+
+        # Bank fields
+        if update_data.bank_account is not None and update_data.bank_account.strip():
+            submission.bank_account_encrypted = encrypt_field(update_data.bank_account)
+        if update_data.ifsc_code is not None:
+            submission.bank_ifsc = update_data.ifsc_code
+        if update_data.bank_name is not None:
+            submission.bank_name = update_data.bank_name
+        if update_data.bank_branch is not None:
+            submission.bank_branch = update_data.bank_branch
+
+        db.add(AuditLog(
+            event_type="SUBMISSION_UPDATED",
+            employee_id=submission.employee_id,
+            kyc_submission_id=submission_id,
+            performed_by="hr_user",
+            details=json.dumps({"updated_fields": [k for k, v in update_data.dict().items() if v is not None]}),
+            timestamp=datetime.now(timezone.utc)
+        ))
+        db.commit()
+
+        webhook_logger.info(f"Submission {submission_id} updated by HR")
+        return {"id": submission_id, "status": "updated", "message": "Submission saved successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        webhook_logger.error(f"Error updating submission: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/submissions/{submission_id}/finalize")
 def finalize_submission(
     submission_id: str,
@@ -679,12 +782,6 @@ def finalize_submission(
             raise HTTPException(
                 status_code=400,
                 detail="Submission already finalized"
-            )
-
-        if submission.status != "APPROVED":
-            raise HTTPException(
-                status_code=403,
-                detail="Only APPROVED submissions can be finalized"
             )
 
         # Generate HRMS employee ID with retry for race conditions

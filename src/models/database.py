@@ -89,6 +89,10 @@ class KYCSubmission(Base):
     bank_micr = Column(String(20), nullable=True)
     bank_confidence = Column(Float, nullable=True)
 
+    # HR-edited fields (saved when form is submitted)
+    blood_group = Column(String(10), nullable=True)
+    marital_status = Column(String(50), nullable=True)
+
     # Cross-validation fields
     name_match_score = Column(Float, nullable=True)
     overall_confidence = Column(Float, nullable=True)

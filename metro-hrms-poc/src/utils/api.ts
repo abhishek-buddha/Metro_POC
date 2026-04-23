@@ -66,7 +66,7 @@ const mapSubmission = (backendData: any): Submission => {
     email: backendData.email || `${nameForEmail}@metrobrands.com`,
     personal_email: `${nameForEmail}@gmail.com`,
     blood_group: backendData.blood_group || '',
-    marital_status: 'Single',
+    marital_status: backendData.marital_status || '',
     spouse_name: '',
     official_email: `${nameForEmail}@metrobrands.com`,
     official_contact: backendData.phone_number || '',
@@ -126,6 +126,28 @@ export const submissionApi = {
   getById: async (id: string): Promise<Submission> => {
     const response = await apiClient.get(`/api/submissions/${id}`);
     return mapSubmission(response.data);
+  },
+
+  // Save HR-edited form data
+  update: async (id: string, data: any): Promise<any> => {
+    const response = await apiClient.patch(`/api/submissions/${id}`, {
+      first_name: data.firstName,
+      full_name: data.fullName,
+      dob: data.dob,
+      gender: data.gender,
+      blood_group: data.bloodGroup,
+      marital_status: data.maritalStatus,
+      father_name: data.fatherName,
+      address_line1: data.addressLine1,
+      address_line2: data.addressLine2,
+      address_line3: data.addressLine3,
+      address_line4: data.addressLine4,
+      bank_account: data.accountNumber,
+      ifsc_code: data.ifscCode,
+      bank_name: data.bankName,
+      bank_branch: data.branchAddress,
+    });
+    return response.data;
   },
 
   // Finalize submission

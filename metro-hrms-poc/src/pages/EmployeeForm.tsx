@@ -167,7 +167,8 @@ const EmployeeForm: React.FC = () => {
   const handleSubmit = async () => {
     try {
       if (!id) return;
-      await submissionApi.finalize(id, formData);
+      await submissionApi.update(id, formData);
+      await submissionApi.finalize(id, { finalized_by: 'hr_user' });
       alert('Employee form submitted successfully!');
       navigate('/');
     } catch (err) {
