@@ -1,5 +1,4 @@
 """OCR extraction service for PAN and Aadhaar cards."""
-import easyocr
 import re
 from typing import Optional, Dict
 from src.services.validation import validate_pan, validate_aadhaar
