@@ -12,6 +12,7 @@ This module provides:
 from fastapi import FastAPI, Request, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from twilio.request_validator import RequestValidator
 import requests
@@ -56,6 +57,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve uploaded documents as static files
+_uploads_path = os.getenv('UPLOADS_PATH', 'uploads')
+os.makedirs(_uploads_path, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_uploads_path), name="uploads")
 
 # Register routers
 app.include_router(upload_router)

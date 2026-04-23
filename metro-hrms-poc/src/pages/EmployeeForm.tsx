@@ -89,8 +89,8 @@ const EmployeeForm: React.FC = () => {
       // Pre-populate form with submission data
       setFormData({
         // FROM WHATSAPP DOCUMENTS:
-        firstName: data.aadhaar_name || '',  // From Aadhaar
-        fullName: data.pan_name || '',  // From PAN
+        firstName: data.aadhaar_name || data.pan_name || '',  // From Aadhaar, fallback PAN
+        fullName: data.pan_name || data.aadhaar_name || '',  // From PAN, fallback Aadhaar
         dob: data.pan_dob || data.aadhaar_dob || '',  // From PAN or Aadhaar
         gender: data.gender || '',  // From Aadhaar
         fatherName: data.father_name || '',  // From PAN
@@ -100,7 +100,7 @@ const EmployeeForm: React.FC = () => {
         branchAddress: data.branch_name || '',  // From Bank Statement
 
         // HARDCODED FOR POC (not from documents):
-        bloodGroup: data.blood_group || 'A+',
+        bloodGroup: data.blood_group || '',
         maritalStatus: data.marital_status || 'Single',
         contactNumber: data.contact_number || '',
         personalEmail: data.personal_email || '',

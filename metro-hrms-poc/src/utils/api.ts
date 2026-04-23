@@ -26,14 +26,24 @@ const convertDateFormat = (dateStr: string): string => {
   return dateStr;
 };
 
+// Convert an absolute server file path to a viewable URL
+const toDocumentUrl = (filePath: string): string => {
+  const normalized = filePath.replace(/\\/g, '/');
+  const match = normalized.match(/uploads\/(.+)$/);
+  return match ? `${API_BASE_URL}/uploads/${match[1]}` : '';
+};
+
 // Helper to map backend submission to frontend format
 const mapSubmission = (backendData: any): Submission => {
   // Generate hardcoded fields for POC (fields not in documents)
   const fullName = backendData.pan_name || backendData.aadhaar_name || '';
   const nameForEmail = fullName.toLowerCase().replace(/\s+/g, '.');
 
-  // Split address into multiple lines
-  const addressParts = (backendData.aadhaar_address || '').split(',').map((s: string) => s.trim());
+  // Split address into lines, skipping C/O prefix lines
+  const addressParts = (backendData.aadhaar_address || '')
+    .split(',')
+    .map((s: string) => s.trim())
+    .filter((s: string) => !s.toLowerCase().startsWith('c/o'));
 
   return {
     id: backendData.id,
@@ -55,7 +65,7 @@ const mapSubmission = (backendData: any): Submission => {
     // Hardcoded fields for POC (not in documents)
     email: backendData.email || `${nameForEmail}@metrobrands.com`,
     personal_email: `${nameForEmail}@gmail.com`,
-    blood_group: 'A+',
+    blood_group: backendData.blood_group || '',
     marital_status: 'Single',
     spouse_name: '',
     official_email: `${nameForEmail}@metrobrands.com`,
@@ -76,16 +86,16 @@ const mapSubmission = (backendData: any): Submission => {
     branch_name: backendData.bank_branch || '',
     bank_branch: backendData.bank_branch,
 
-    // Document URLs - convert file paths to full URLs
+    // Document URLs - convert absolute server paths to viewable URLs via /uploads static route
     aadhaar_pdf_url: backendData.documents?.find((d: any) => d.document_type === 'AADHAAR_CARD')?.file_path
-      ? `${API_BASE_URL}/${backendData.documents.find((d: any) => d.document_type === 'AADHAAR_CARD').file_path.replace(/\\/g, '/')}`
-      : 'AADHAAR_CARD.pdf',
+      ? toDocumentUrl(backendData.documents.find((d: any) => d.document_type === 'AADHAAR_CARD').file_path)
+      : null,
     pan_pdf_url: backendData.documents?.find((d: any) => d.document_type === 'PAN_CARD')?.file_path
-      ? `${API_BASE_URL}/${backendData.documents.find((d: any) => d.document_type === 'PAN_CARD').file_path.replace(/\\/g, '/')}`
-      : 'PAN_CARD.pdf',
-    cancelled_cheque_url: backendData.documents?.find((d: any) => d.document_type === 'CANCELLED_CHEQUE')?.file_path
-      ? `${API_BASE_URL}/${backendData.documents.find((d: any) => d.document_type === 'CANCELLED_CHEQUE').file_path.replace(/\\/g, '/')}`
-      : 'CANCELLED_CHEQUE.pdf',
+      ? toDocumentUrl(backendData.documents.find((d: any) => d.document_type === 'PAN_CARD').file_path)
+      : null,
+    cancelled_cheque_url: backendData.documents?.find((d: any) => d.document_type === 'BANK_DOCUMENT')?.file_path
+      ? toDocumentUrl(backendData.documents.find((d: any) => d.document_type === 'BANK_DOCUMENT').file_path)
+      : null,
     aadhaar_password: 'DOB123',
 
     status: backendData.status,
