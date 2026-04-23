@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libgl1 \
     redis-server \
     supervisor \
     && rm -rf /var/lib/apt/lists/*

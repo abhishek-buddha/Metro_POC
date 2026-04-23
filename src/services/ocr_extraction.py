@@ -19,9 +19,7 @@ class OCRExtractor:
 
     def __init__(self):
         """Initialize EasyOCR reader with English and Hindi support."""
-        logger.info("Initializing OCRExtractor")
-        self.reader = easyocr.Reader(['en', 'hi'])
-        logger.info("OCRExtractor initialized successfully")
+        logger.info("Initializing OCRExtractor (AI-fallback mode — EasyOCR bypassed)")
 
     def extract_pan_data(self, file_path: str) -> Dict:
         """

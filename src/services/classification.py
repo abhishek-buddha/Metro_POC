@@ -38,9 +38,8 @@ class DocumentClassifier:
     BANK_KEYWORDS = {"BANK", "IFSC", "ACCOUNT", "BRANCH"}
 
     def __init__(self):
-        """Initialize EasyOCR reader and OpenAI client."""
-        logger.info("Initializing DocumentClassifier")
-        self.reader = easyocr.Reader(['en', 'hi'])
+        """Initialize OpenAI client. EasyOCR bypassed for memory efficiency."""
+        logger.info("Initializing DocumentClassifier (AI-only mode)")
         self.client = OpenAI(api_key=config.OPENAI_API_KEY)
         logger.info("DocumentClassifier initialized successfully")
 
@@ -67,51 +66,13 @@ class DocumentClassifier:
             extra={"file_path": file_path}
         )
 
-        # Stage 1: Extract text using EasyOCR
-        try:
-            ocr_results = self.reader.readtext(file_path)
-            extracted_text = " ".join([text[1] for text in ocr_results])
-            logger.info(
-                f"OCR text extracted",
-                extra={"file_path": file_path, "text_length": len(extracted_text)}
-            )
-        except Exception as e:
-            logger.error(
-                f"OCR extraction failed: {str(e)}",
-                extra={"file_path": file_path}
-            )
-            raise
-
-        # Stage 1: Try keyword detection
-        doc_type, confidence = self._classify_with_keywords(extracted_text)
-
-        if doc_type != "UNKNOWN":
-            logger.info(
-                f"Document classified with keywords",
-                extra={
-                    "file_path": file_path,
-                    "doc_type": doc_type,
-                    "confidence": confidence
-                }
-            )
-            return doc_type, confidence
-
-        # Stage 2: Fallback to AI classification
-        logger.info(
-            f"No keyword match, falling back to AI classification",
-            extra={"file_path": file_path}
-        )
+        # AI-only classification — EasyOCR/PyTorch bypassed to reduce memory usage
+        logger.info("Classifying with AI (AI-only mode)", extra={"file_path": file_path})
         doc_type, confidence = self._classify_with_ai(file_path)
-
         logger.info(
-            f"Document classified with AI",
-            extra={
-                "file_path": file_path,
-                "doc_type": doc_type,
-                "confidence": confidence
-            }
+            "Document classified with AI",
+            extra={"file_path": file_path, "doc_type": doc_type, "confidence": confidence}
         )
-
         return doc_type, confidence
 
     def _classify_with_keywords(self, text: str) -> Tuple[str, float]:

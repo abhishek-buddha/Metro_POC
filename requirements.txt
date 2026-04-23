@@ -10,9 +10,7 @@ sqlalchemy==2.0.25
 redis==5.0.1
 
 # OCR
-easyocr==1.7.0
 Pillow==10.2.0
-opencv-python-headless==4.9.0.80
 
 # AI
 openai==1.12.0
